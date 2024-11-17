@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streak Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="time"] {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Streak Tracker</h1>
+        <p>Current Streak: <span id="streak">0</span> days</p>
+        <button id="increment">Add Day</button>
+        <button id="reset">Reset Streak</button>
+        <p>Reminder Time:</p>
+        <input type="time" id="reminderTime">
+        <button id="setReminder">Set Reminder</button>
+    </div>
+
+    <script>
+        // JavaScript for app functionality
+        const streakEl = document.getElementById('streak');
+        const incrementBtn = document.getElementById('increment');
+        const resetBtn = document.getElementById('reset');
+        const setReminderBtn = document.getElementById('setReminder');
+        const reminderTimeInput = document.getElementById('reminderTime');
+
+        // Load streak from local storage
+        let streak = parseInt(localStorage.getItem('streak')) || 0;
+        streakEl.textContent = streak;
+
+        // Increment streak
+        incrementBtn.addEventListener('click', () => {
+            streak++;
+            localStorage.setItem('streak', streak);
+            streakEl.textContent = streak;
+        });
+
+        // Reset streak
+        resetBtn.addEventListener('click', () => {
+            streak = 0;
+            localStorage.setItem('streak', streak);
+            streakEl.textContent = streak;
+        });
+
+        // Request Notification permission
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Set reminder
+        setReminderBtn.addEventListener('click', () => {
+            const reminderTime = reminderTimeInput.value;
+            if (!reminderTime) {
+                alert('Please set a time for the reminder.');
+                return;
+            }
+
+            const [hours, minutes] = reminderTime.split(':').map(Number);
+
+            function scheduleNotification() {
+                const now = new Date();
+                const reminderDate = new Date();
+                reminderDate.setHours(hours, minutes, 0, 0);
+
+                if (reminderDate < now) {
+                    reminderDate.setDate(reminderDate.getDate() + 1);
+                }
+
+                const timeout = reminderDate - now;
+                setTimeout(() => {
+                    if (Notification.permission === 'granted') {
+                        new Notification('Streak Reminder', {
+                            body: "Don't forget to update your streak!",
+                            icon: 'https://via.placeholder.com/64' // Add an icon URL here
+                        });
+                    }
+                    scheduleNotification(); // Reschedule for next day
+                }, timeout);
+            }
+
+            scheduleNotification();
+            alert(`Reminder set for ${reminderTime}`);
+        });
+    </script>
+</body>
+</html>
